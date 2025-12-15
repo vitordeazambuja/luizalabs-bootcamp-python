@@ -1,66 +1,74 @@
-from abc import ABC
+from abc import ABC, abstractmethod
+
+AGENCIA = "001"
+NUMERO = "989041"
+
+class PessoaFisica():
+    def __init__(self, cpf, nome, data_nascimento):
+        self._cpf = cpf
+        self._nome = nome
+        self._data_nascimento = data_nascimento
 
 class Transacao(ABC):
-    def registrar(conta):
+    @abstractmethod
+    def registrar(self, conta):
         pass
 
 class Deposito(Transacao):
-    def __init__(self, _valor):
-        self._valor = _valor
+    def __init__(self, valor):
+        self._valor = valor
     
-    def registrar(_conta):
+    def registrar(self, conta):
+        conta.depositar(self._valor)
         pass
 
 class Saque(Transacao):
-    def __init__(self, _valor):
-        self._valor = _valor
+    def __init__(self, valor):
+        self._valor = valor
 
-    def registrar():
+    def registrar(self, conta):
         pass
 
 class Historico:
-    def adicionar_transacao(transacao):
+    def adicionar_transacao(self, transacao):
         pass
-
-
-class Cliente():
-    def __init__(self, _endereco, _contas):
-        self._endereco = _endereco
-        self._contas = _contas
-    
-    def realizar_transacao(conta, transacao):
-        pass
-
-    def adicionar_conta(conta):
-        pass
-
-class PessoaFisica(Cliente):
-    def __init__(self, _cpf, _nome, _data_nascimento):
-        self._cpf = _cpf
-        self._nome = _nome
-        self._data_nascimento = _data_nascimento
 
 class Conta:
-    def __init__(self, _saldo, _numero, _agencia, _cliente, _historico):
-        self._saldo = _saldo
-        self._numero = _numero
-        self._agencia = _agencia
-        self._cliente = _cliente
-        self._historico = _historico
+    def __init__(self, numero, agencia, cliente, historico):
+        self._saldo = 0
+        self._numero = numero
+        self._agencia = agencia
+        self._cliente = cliente
+        self._historico = historico
     
-    def saldo():
+    @property
+    def saldo(self):
+        return self._saldo
+
+    @classmethod
+    def nova_conta(cls, cliente, numero):
+        return Conta(numero,AGENCIA,cliente,Historico())
+
+    def sacar(self, valor):
         pass
 
-    def nova_conta(cliente, numero):
-        pass
-
-    def sacar(valor):
-        pass
-
-    def depositar(valor):
+    def depositar(self, valor):
         pass
 
 class ContaCorrente(Conta):
-    def __init__(self, _limite, _limite_saques):
-        self._limite = _limite
-        self._limite_saques = _limite_saques
+    def __init__(self,numero, agencia, cliente, historico, limite, limite_saques):
+        super().__init__
+        self._limite = limite
+        self._limite_saques = limite_saques
+
+class Cliente(PessoaFisica):
+    def __init__(self, endereco, contas):
+        super().__init__
+        self._endereco = endereco
+        self._contas = contas
+    
+    def realizar_transacao(self, conta, transacao):
+        pass
+
+    def adicionar_conta(self, conta):
+        pass
