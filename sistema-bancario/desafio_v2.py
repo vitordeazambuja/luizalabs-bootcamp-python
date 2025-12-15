@@ -92,3 +92,58 @@ class Cliente(PessoaFisica):
 
     def adicionar_conta(self, conta):
         self._contas.append(conta)
+
+# Testes
+
+cliente1 = Cliente(
+    cpf="12345678900",
+    nome="João Silva",
+    data_nascimento="01/01/1990",
+    endereco="Rua A, 123"
+)
+
+conta1 = ContaCorrente(
+    numero=NUMERO,
+    agencia=AGENCIA,
+    cliente=cliente1,
+    historico=Historico(),
+    limite=500,
+    limite_saques=3
+)
+
+cliente1.adicionar_conta(conta1)
+
+deposito1 = Deposito(1000)
+cliente1.realizar_transacao(conta1, deposito1)
+
+print(conta1.saldo)
+
+saque1 = Saque(200)
+cliente1.realizar_transacao(conta1, saque1)
+
+print(conta1.saldo)
+
+cliente1.realizar_transacao(conta1, Saque(100))
+cliente1.realizar_transacao(conta1, Saque(100))
+cliente1.realizar_transacao(conta1, Saque(100))
+
+for transacao in conta1._historico._log:
+    print(transacao.__class__.__name__, transacao._valor)
+
+cliente2 = Cliente(
+    cpf="98765432100",
+    nome="Maria Souza",
+    data_nascimento="10/05/1995",
+    endereco="Av. B, 456"
+)
+
+conta2 = ContaCorrente(
+    numero="123456",
+    agencia=AGENCIA,
+    cliente=cliente2,
+    historico=Historico(),
+    limite=300,
+    limite_saques=2
+)
+
+cliente2.adicionar_conta(conta2)
