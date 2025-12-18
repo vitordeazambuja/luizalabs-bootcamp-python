@@ -16,47 +16,76 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 
 router = APIRouter()
 
-@router.post('/', summary='Criar um novo atleta', status_code=status.HTTP_201_CREATED, response_model=AtletaOut)
-async def post_atleta(db_session: DatabaseDependency, atleta_in: AtletaIn = Body(...)):
+@router.post(
+    '/',
+    summary='Criar um novo atleta',
+    status_code=status.HTTP_201_CREATED,
+    response_model=AtletaOut,
+)
+async def post_atleta(
+    db_session: DatabaseDependency,
+    atleta_in: AtletaIn = Body(...),
+):
     categoria_nome = atleta_in.categoria.nome
-    centro_treinamento_nome = atleta_in..centro_treinamento.nome
+    centro_treinamento_nome = atleta_in.centro_treinamento.nome
 
-    result = await db_session.execute(select(CategoriaModel).filter_by(nome=categoria_nome))
-    categoria= result.scalars().first()
+    categoria = (
+        await db_session.execute(
+            select(CategoriaModel).filter_by(nome=categoria_nome)
+        )
+    ).scalars().first()
 
     if not categoria:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f'A categoria {categoria_nome} não foi encontrada')
-    
-    result = await db_session.execute(select(CentroTreinamentoModel).filter_by(nome=centro_treinamento_nome))
-    centro_treinamento= result.scalars().first()
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=f'A categoria {categoria_nome} não foi encontrada',
+        )
+
+    centro_treinamento = (
+        await db_session.execute(
+            select(CentroTreinamentoModel).filter_by(nome=centro_treinamento_nome)
+        )
+    ).scalars().first()
 
     if not centro_treinamento:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f'O centro de treinamento {centro_treinamento_nome} não foi encontrado')
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=f'O centro de treinamento {centro_treinamento_nome} não foi encontrado',
+        )
 
-    atleta_out = AtletaOut(id=uuid4(), created_at=datetime.now(timezone.utc), **atleta_in.model_dump())
-    atleta_model = AtletaModel(**atleta_out.model_dump(exclude={'categoria','centro_treinamento'}))
-    atleta_model.categoria_id = categoria.pk_id
-    atleta_model.centro_treinamento_id = centro_treinamento.pk_id
+    atleta_model = AtletaModel(
+        **atleta_in.model_dump(exclude={'categoria', 'centro_treinamento'}),
+        categoria_id=categoria.pk_id,
+        centro_treinamento_id=centro_treinamento.pk_id,
+        created_at=datetime.now(timezone.utc),
+    )
+
     db_session.add(atleta_model)
+    await db_session.commit()
+    await db_session.refresh(atleta_model)
 
-    try:
-        await db_session.commit()
-    except IntegrityError:
-        await db_session.rollback()
-        raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, detail=f'Já existe um atleta cadastrado com o cpf: {atleta_in.cpf}')
-    
-    return atleta_out
+    return AtletaOut.model_validate(atleta_model)
 
 @router.get('/', summary='Consultar todos os atletas', status_code=status.HTTP_200_OK, response_model=Page[AtletaListOut])
 async def get_atletas(db_session: DatabaseDependency, nome: Optional[str] = Query(None), cpf: Optional[str] = Query(None)):
-    query = (select(AtletaModel).join(CategoriaModel).join(CentroTreinamentoModel))
-    
+    query = (
+    select(
+        AtletaModel.id,
+        AtletaModel.nome,
+        AtletaModel.cpf,
+        CategoriaModel.nome.label("categoria"),
+        CentroTreinamentoModel.nome.label("centro_treinamento"),
+    )
+    .join(CategoriaModel)
+    .join(CentroTreinamentoModel)
+)
+
     if nome:
         query = query.filter(AtletaModel.nome.ilike(f'%{nome}'))
     if cpf:
         query = query.filter(AtletaModel.cpf == cpf)
     
-    return paginate(db_session, query)
+    return await paginate(db_session, query)
 
 @router.get('/{id}', summary='Consultar um atleta pelo id', status_code=status.HTTP_200_OK, response_model=AtletaOut)
 async def get_atleta(id: UUID4, db_session: DatabaseDependency) -> AtletaOut:

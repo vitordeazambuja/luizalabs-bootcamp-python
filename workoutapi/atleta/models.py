@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from contrib.models import BaseModel
@@ -13,6 +13,12 @@ class AtletaModel(BaseModel):
     peso: Mapped[float]
     altura: Mapped[float]
     sexo: Mapped[str]
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
 
     categoria_id: Mapped[int] = mapped_column(ForeignKey('categorias.pk_id'))
     categoria: Mapped['CategoriaModel'] = relationship(back_populates='atletas', lazy='selectin')

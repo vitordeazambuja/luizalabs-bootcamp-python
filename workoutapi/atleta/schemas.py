@@ -1,5 +1,6 @@
+from datetime import datetime
 from typing import Annotated, Optional
-from pydantic import Field, PositiveFloat, BaseModel
+from pydantic import UUID4, Field, PositiveFloat, BaseModel
 
 from contrib.schemas import BaseSchema, OutMixin
 
@@ -19,8 +20,14 @@ class Atleta(BaseSchema):
 class AtletaIn(Atleta):
     pass
 
-class AtletaOut(Atleta, OutMixin):
-    pass
+class AtletaOut(BaseModel):
+    id: UUID4
+    nome: str
+    cpf: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class AtletaUpdate(BaseSchema):
     nome: Annotated[Optional[str], Field(None, description='Nome do atleta', examples=['Joao'], max_length=50)]
