@@ -5,6 +5,7 @@ ROOT_PATH = Path(__file__).parent
 
 conexao = sqlite3.connect(ROOT_PATH / 'meu_banco.db')
 cursor = conexao.cursor()
+cursor.row_factory = sqlite3.Row # type: ignore
 
 def criar_tabela(conexao, cursor):
     cursor.execute('CREATE TABLE clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nome VARCHAR(100), email VARCHAR(150))')
@@ -28,13 +29,32 @@ def inserir_muitos(conexao, cursor, dados):
     cursor.executemany('INSERT INTO clientes (nome,email) VALUES (?,?);', dados)
     conexao.commit()
 
-dados =[
-    ('Guilherme', 'guilherme@gmail.com'),
-    ('Eduardo', 'eduardo@gmail.com'),
-    ('Maria', 'maria@gmail.com'),
-    ('Clara', 'clara@gmail.com'),
-    ('Felipe', 'felipe@gmail.com'),
-    ('Ingrid', 'ingrid@gmail.com')
-]
+def recuperar_cliente(cursor, id):
+    cursor.execute('SELECT * FROM clientes WHERE id=?', (id,))
+    return cursor.fetchone()
 
-inserir_muitos(conexao, cursor, dados)
+def listar_clientes(cursor):
+    return cursor.execute('SELECT * FROM clientes;')
+
+
+clientes = listar_clientes(cursor)
+for cliente in clientes:
+    print(dict(cliente))
+
+
+cliente = recuperar_cliente(cursor , 3)
+print(dict(cliente))
+print(cliente['id'])
+
+print(f'Seja bem vindo ao sistema {cliente['nome']}')
+
+
+# dados =[
+#     ('Guilherme', 'guilherme@gmail.com'),
+#     ('Eduardo', 'eduardo@gmail.com'),
+#     ('Maria', 'maria@gmail.com'),
+#     ('Clara', 'clara@gmail.com'),
+#     ('Felipe', 'felipe@gmail.com'),
+#     ('Ingrid', 'ingrid@gmail.com')
+# ]
+# inserir_muitos(conexao, cursor, dados)
