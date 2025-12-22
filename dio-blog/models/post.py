@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from main import metadata
+from database import metadata
 
 posts = sa.Table(
     "posts",
@@ -8,5 +8,5 @@ posts = sa.Table(
     sa.Column("title", sa.String(150), nullable=False, unique=True),
     sa.Column("content", sa.String, nullable=False),
     sa.Column("published_at", sa.DateTime, nullable=True),
-    sa.Column("published", sa.Boolean, default=False)
+    sa.Column("published", sa.Boolean, server_default=sa.false(), nullable=False)
 )

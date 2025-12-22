@@ -1,25 +1,14 @@
 from fastapi import FastAPI
 from controllers import post
-import sqlalchemy as sa
-import databases
+from contextlib import asynccontextmanager
+from database import database, engine, metadata
 
-DATABASE_URL = "sqlite:///./blog.db"
-
-database = databases.Database(DATABASE_URL)
-
-metadata = sa.MetaData()
-
-engine = sa.create_engine(DATABASE_URL, connect_args={"check_same_thread":False})
-
-metadata.create_all(engine)
-
-app = FastAPI()
-app.include_router(post.router)
-
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     await database.connect()
-
-@app.on_event("shutdown")
-async def shutdown():
+    metadata.create_all(engine)
+    yield
     await database.disconnect()
+
+app = FastAPI(lifespan=lifespan)
+app.include_router(post.router)
