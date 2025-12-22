@@ -1,9 +1,10 @@
-from fastapi import status, Response, APIRouter
+from fastapi import status, Response, APIRouter, Depends
 from schemas.post import PostIn, PostUpdateIn
 from views.post import PostOut
 from services.post import PostService
+from security import login_required
 
-router = APIRouter(prefix="/posts")
+router = APIRouter(prefix="/posts", dependencies=[Depends(login_required)])
 service = PostService()
 
 @router.get('/', response_model=list[PostOut])
