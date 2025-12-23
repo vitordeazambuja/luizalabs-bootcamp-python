@@ -13,67 +13,61 @@ ALGORITHM = "HS256"
 
 class AccessToken(BaseModel):
     iss: str
-    sub: int
+    sub: str
     aud: str
     exp: float
     iat: float
     nbf: float
     jti: str
 
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"
 
-class JWTToken(BaseModel):
-    access_token: AccessToken
-
-
-def sign_jwt(user_id: int) -> JWTToken:
+def sign_jwt(user_id: int) -> TokenResponse:
     now = time.time()
     payload = {
         "iss": "curso-fastapi.com.br",
-        "sub": user_id,
+        "sub": str(user_id),
         "aud": "curso-fastapi",
-        "exp": now + (60 * 30),  # 30 minutes
+        "exp": now + (60 * 30),
         "iat": now,
         "nbf": now,
         "jti": uuid4().hex,
     }
     token = jwt.encode(payload, SECRET, algorithm=ALGORITHM)
-    return {"access_token": token}
+    return TokenResponse(access_token=token)
 
 
-async def decode_jwt(token: str) -> JWTToken | None:
+async def decode_jwt(token: str) -> AccessToken | None:
     try:
-        decoded_token = jwt.decode(token, SECRET, audience="curso-fastapi", algorithms=[ALGORITHM])
-        _token = JWTToken.model_validate({"access_token": decoded_token})
-        return _token if _token.access_token.exp >= time.time() else None
-    except Exception:
+        decoded = jwt.decode(token, SECRET, audience="curso-fastapi", algorithms=[ALGORITHM],)
+        payload = AccessToken.model_validate(decoded)
+        return payload if payload.exp >= time.time() else None
+    except Exception as e:
+        print("JWT decode error:", e)
         return None
 
 
 class JWTBearer(HTTPBearer):
     def __init__(self, auto_error: bool = True):
-        super(JWTBearer, self).__init__(auto_error=auto_error)
+        super().__init__(auto_error=auto_error)
 
-    async def __call__(self, request: Request) -> JWTToken:
-        authorization = request.headers.get("Authorization", "")
-        scheme, _, credentials = authorization.partition(" ")
+    async def __call__(self, request: Request) -> AccessToken:
+        credentials = await super().__call__(request)
 
-        if credentials:
-            if not scheme == "Bearer":
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication scheme.")
-
-            payload = await decode_jwt(credentials)
-            if not payload:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token.")
-            return payload
-        else:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization code.")
+        if credentials.scheme != "Bearer":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Schema de autenticação inválido!")
+        payload = await decode_jwt(credentials.credentials)
+        if not payload:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido ou expirado.")
+        print("Authorization header:", request.headers.get("Authorization"))
+        return payload
 
 
-async def get_current_user(token: Annotated[JWTToken, Depends(JWTBearer())]) -> dict[str, int]:
-    return {"user_id": token.access_token.sub}
+async def get_current_user(token: Annotated[AccessToken, Depends(JWTBearer())]) -> dict[str, int]:
+    return {"user_id": int(token.sub)}
 
 
 def login_required(current_user: Annotated[dict[str, int], Depends(get_current_user)]):
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
     return current_user
