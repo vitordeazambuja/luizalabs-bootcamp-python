@@ -1,4 +1,4 @@
-from fastapi import status, Response, APIRouter, Depends
+from fastapi import Query, status, Response, APIRouter, Depends
 from schemas.post import PostIn, PostUpdateIn
 from views.post import PostOut
 from services.post import PostService
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/posts", dependencies=[Depends(login_required)])
 service = PostService()
 
 @router.get('/', response_model=list[PostOut])
-async def read_posts(published: bool | None = None, limit: int = 10, skip: int = 0):
+async def read_posts(published: bool = Query(...),limit: int = Query(..., gt=0),skip: int = 0,):
     return await service.read_all(published=published, limit=limit, skip=skip)
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=PostOut)

@@ -30,7 +30,6 @@ class PostService:
         return await self.__get_by_id(id)
 
     async def delete(self, id:int) -> None:
-        await self.__get_by_id(id)
         command = posts.delete().where(posts.c.id == id)
         await database.execute(command)
 
