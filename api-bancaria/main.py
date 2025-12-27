@@ -6,6 +6,8 @@ import auth.model
 import accounts.model
 import transactions.model
 
+from auth.controller import router as auth_router
+
 @asynccontextmanager
 async def lifespan(app):
     await database.connect()
@@ -17,3 +19,5 @@ app = FastAPI(
     title="API Bancária",
     lifespan=lifespan,
 )
+
+app.include_router(auth_router, prefix="/auth", tags=["Auth"])
