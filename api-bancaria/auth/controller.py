@@ -14,3 +14,10 @@ async def register(user: UserCreate):
 async def login(user: UserCreate):
     token = await service.login(email=user.email, password=user.password,)
     return {"access_token": token, "token_type": "bearer"}
+
+from fastapi import Depends
+from core.security import get_current_user
+
+@router.get("/me")
+async def me(user=Depends(get_current_user)):
+    return {"id": user["id"], "email": user["email"]}
