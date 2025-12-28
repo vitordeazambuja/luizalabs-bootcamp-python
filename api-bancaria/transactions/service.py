@@ -1,8 +1,9 @@
 from transactions.model import transactions
 from database import database
+from decimal import Decimal
 
 class TransactionService:
-    async def create(self, account_id: int, type_: str, amount: float):
+    async def create(self, account_id: int, type_: str, amount: Decimal):
         query = transactions.insert().values(
             account_id=account_id,
             type=type_,

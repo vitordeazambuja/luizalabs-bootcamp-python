@@ -1,5 +1,6 @@
 from accounts.model import accounts
 from database import database
+from decimal import Decimal
 
 
 class AccountService:
@@ -11,7 +12,7 @@ class AccountService:
         query = accounts.select().where(accounts.c.user_id == user_id)
         return await database.fetch_one(query)
 
-    async def deposit(self, user_id: int, amount: float) -> float:
+    async def deposit(self, user_id: int, amount: Decimal) -> Decimal:
         if amount <= 0:
             raise ValueError("Valor do depósito deve ser positivo")
 
@@ -31,7 +32,7 @@ class AccountService:
 
             return new_balance
 
-    async def withdraw(self, user_id: int, amount: float) -> float:
+    async def withdraw(self, user_id: int, amount: Decimal) -> Decimal:
         if amount <= 0:
             raise ValueError("Valor do saque deve ser positivo")
 

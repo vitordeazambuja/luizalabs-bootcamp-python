@@ -1,4 +1,4 @@
-from pydantic import BaseModel, PositiveFloat
+from pydantic import BaseModel, field_validator
 from decimal import Decimal
 
 class AccountOut(BaseModel):
@@ -6,7 +6,21 @@ class AccountOut(BaseModel):
     balance: Decimal
 
 class DepositIn(BaseModel):
-    amount: PositiveFloat
+    amount: Decimal
+
+    @field_validator("amount")
+    @classmethod
+    def validate_positive(cls, v: Decimal):
+        if v <= 0:
+            raise ValueError("Valor deve ser positivo")
+        return v
 
 class WithdrawIn(BaseModel):
-    amount: PositiveFloat
+    amount: Decimal
+
+    @field_validator("amount")
+    @classmethod
+    def validate_positive(cls, v: Decimal):
+        if v <= 0:
+            raise ValueError("Valor deve ser positivo")
+        return v
