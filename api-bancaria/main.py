@@ -7,6 +7,7 @@ import accounts.model
 import transactions.model
 
 from auth.controller import router as auth_router
+from accounts.controller import router as accounts_router
 
 @asynccontextmanager
 async def lifespan(app):
@@ -21,3 +22,4 @@ app = FastAPI(
 )
 
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
+app.include_router(accounts_router, prefix="/accounts", tags=["Accounts"])
