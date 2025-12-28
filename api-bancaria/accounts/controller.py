@@ -11,6 +11,14 @@ router = APIRouter(prefix="/accounts", tags=["Accounts"])
 service = AccountService()
 transaction_service = TransactionService()
 
+@router.post("/me", status_code=201)
+async def create_account(user=Depends(get_current_user)):
+    account = await service.get_by_user(user["id"])
+    if account is not None:
+        raise HTTPException(status_code=400, detail="Conta já existe")
+
+    account_id = await service.create(user_id=user["id"])
+    return {"account_id": account_id}
 
 @router.post("/me/deposit", response_model=AccountOut)
 async def deposit(
