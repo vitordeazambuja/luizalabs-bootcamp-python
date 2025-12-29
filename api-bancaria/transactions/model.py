@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, ForeignKey, Numeric, String, DateTime
+from sqlalchemy import Table, Column, Integer, ForeignKey, Numeric, String, DateTime, func
 from datetime import datetime
 from database import metadata
 
@@ -9,5 +9,5 @@ transactions = Table(
     Column("account_id", ForeignKey("accounts.id"), nullable=False),
     Column("type", String, nullable=False),
     Column("amount", Numeric(12,2), nullable=False),
-    Column("created_at", DateTime, default=datetime.utcnow),
+    Column("created_at", DateTime(timezone=True), server_default=func.now(),nullable=False),
 )
